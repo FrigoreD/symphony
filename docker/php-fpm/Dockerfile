@@ -12,6 +12,20 @@ RUN if [ ${INSTALL_XDEBUG} = true ]; \
 
 COPY ./docker/php-fpm/xdebug.ini /usr/local/etc/php/conf.d/xdebug.ini
 
+# Kafka
+ARG INSTALL_KAFKA=false
+ARG LIBRDKAFKA_VERSION
+RUN if [ ${INSTALL_KAFKA} = true ]; \
+    then \
+      git clone --depth 1 --branch v$LIBRDKAFKA_VERSION https://github.com/edenhill/librdkafka.git \
+      && cd librdkafka \
+      && ./configure \
+      && make \
+      && make install \
+      && pecl install rdkafka && docker-php-ext-enable rdkafka \
+      && echo "extension=rdkafka.so" > /usr/local/etc/php/conf.d/rdkafka.ini; \
+    fi;
+
 # Configure non-root user.
 ARG PUID=1000
 ARG PGID=1000
