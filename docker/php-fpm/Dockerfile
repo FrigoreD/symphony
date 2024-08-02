@@ -1,36 +1,36 @@
-FROM php:8.3.0-fpm-alpine
+FROM php:8.3.0-fpm
 
 # Install packages
-RUN apk add --no-cache curl git build-base zlib-dev oniguruma-dev autoconf bash linux-headers
+RUN apt update && apt-get -y install curl autoconf bash libsmbclient-dev smbclient
+RUN pecl install smbclient && docker-php-ext-enable smbclient
 
 # Xdebug
-ARG INSTALL_XDEBUG=false
-RUN if [ ${INSTALL_XDEBUG} = true ]; \
-    then \
-      pecl install xdebug && docker-php-ext-enable xdebug; \
-    fi;
+#ARG INSTALL_XDEBUG=false
+#RUN if [ ${INSTALL_XDEBUG} = true ]; \
+#    then \
+#      pecl install xdebug && docker-php-ext-enable xdebug; \
+#    fi;
 
-COPY ./docker/php-fpm/xdebug.ini /usr/local/etc/php/conf.d/xdebug.ini
+#COPY ./docker/php-fpm/xdebug.ini /usr/local/etc/php/conf.d/xdebug.ini
 
-# Kafka
-ARG INSTALL_KAFKA=false
-ARG LIBRDKAFKA_VERSION
-RUN if [ ${INSTALL_KAFKA} = true ]; \
-    then \
-      git clone --depth 1 --branch v$LIBRDKAFKA_VERSION https://github.com/edenhill/librdkafka.git \
-      && cd librdkafka \
-      && ./configure \
-      && make \
-      && make install \
-      && pecl install rdkafka && docker-php-ext-enable rdkafka \
-      && echo "extension=rdkafka.so" > /usr/local/etc/php/conf.d/rdkafka.ini; \
-    fi;
+## Kafka
+#ARG INSTALL_KAFKA=false
+#ARG LIBRDKAFKA_VERSION
+#RUN if [ ${INSTALL_KAFKA} = true ]; \
+#    then \
+#      git clone --depth 1 --branch v$LIBRDKAFKA_VERSION https://github.com/edenhill/librdkafka.git \
+#      && cd librdkafka \
+#      && ./configure \
+#      && make \
+#      && make install \
+#      && pecl install rdkafka && docker-php-ext-enable rdkafka \
+#      && echo "extension=rdkafka.so" > /usr/local/etc/php/conf.d/rdkafka.ini; \
+#    fi;
 
 # Configure non-root user.
 ARG PUID=1000
 ARG PGID=1000
-RUN apk --no-cache add shadow && \
-    groupmod -o -g ${PGID} www-data && \
+RUN groupmod -o -g ${PGID} www-data && \
     usermod -o -u ${PUID} -g www-data www-data
 
 # Source code
